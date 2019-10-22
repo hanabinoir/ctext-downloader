@@ -8,19 +8,20 @@ logger = logging.getLogger('ctext')
 
 
 class Downloader():
-    def __init__(self, title, init_file_num, max_file_num):
+    def __init__(self, title, init_file_str, max_file_str):
         self.title = title
-        self.init_file_num = init_file_num
-        self.max_file_num = max_file_num
+        self.init_file_str = init_file_str
+        self.max_file_str = max_file_str
 
     def download(self):
         title = self.title
         pool = urllib3.PoolManager()
-        file_num = self.init_file_num
+        file_num = int(self.init_file_str)
+        max_file_num = int(self.max_file_str)
         sino_index = 0
-        max_sino_index = self.max_file_num - file_num + 1
+        max_sino_index = max_file_num - file_num + 1
         
-        while file_num <= self.max_file_num:
+        while file_num <= max_file_num:
             if sino_index < max_sino_index:
                 sino_count = self.get_sino_count(sino_index)
             else:
@@ -28,20 +29,29 @@ class Downloader():
 
             file_name = title + sino_count + ".pdf"
             downloaded_root = Path('Downloaded')
-            title_dir = Path(title)
-            title_path = downloaded_root / title_dir
-            file_path = downloaded_root / title_dir / file_name
+            title_path_name = Path(title)
+            title_path = downloaded_root / title_path_name
+            file_path = downloaded_root / title_path_name / file_name
 
             if not title_path.exists():
                 title_path.mkdir();
                 logging.info("已作成：" + title)
 
             if not file_path.is_file():
-                url = "https://ia800502.us.archive.org/0/items/021117{num}.cn/021117{num}.cn.pdf"
-                url = url.format(num = file_num)
+                file_str = str(file_num)
+                missed_digits = len(self.init_file_str) - len(file_str)
+                leading_zeros = '0' * (missed_digits // len('0'))
+                file_str = leading_zeros + file_str
+                url = "https://ia800502.us.archive.org/0/items/{file_str}.cn/{file_str}.cn.pdf"
+                url = url.format(file_str = file_str)
                 # Download the data
                 logging.info("下載：" + url)
                 response = pool.request("GET", url)
+
+                if not response.status == 200:
+                    logging.warning("文件不存在，下載中止")
+                    break
+                
                 logging.info("下載完成：" + file_name) # Dowload finished
 
                 # Created the pdf with the data
