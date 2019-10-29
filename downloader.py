@@ -48,10 +48,11 @@ class Downloader():
                 logging.info("下載：" + url)
                 response = pool.request("GET", url)
 
+                # Stop when the file does not exists
                 if not response.status == 200:
                     logging.warning("文件不存在，下載中止")
                     break
-                
+
                 logging.info("下載完成：" + file_name) # Dowload finished
 
                 # Created the pdf with the data
@@ -66,6 +67,7 @@ class Downloader():
             sino_index += 1
             file_num += 1
 
+    # Get the sino count for volumn
     def get_sino_count(self, sino_index):
         sino_counts = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
         sino_count = ""
